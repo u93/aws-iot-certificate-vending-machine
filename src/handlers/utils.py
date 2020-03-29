@@ -14,7 +14,7 @@ def base_response(status_code: int, dict_body: dict):
 class RegisterThingSchema(Schema):
     thing_name = fields.Str(required=True, data_key="thingName")
     thing_type_name = fields.Str(required=True, data_key="thingTypeName")
-    attribute_payload = fields.Dict(attributes=fields.Dict(), data_key="attributePayload")
+    attribute_payload = fields.Dict(attributes=fields.Dict(), data_key="thingAttributes")
 
     # @validates("thing_type_name")
     # def thing_type_exists(self, value):

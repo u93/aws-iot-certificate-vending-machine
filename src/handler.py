@@ -1,7 +1,7 @@
 import json
 
-from .handlers.registration import CvmRegistration
-from .handlers.utils import RegisterThingSchema, Logger, base_response
+from handlers.registration import CvmRegistration
+from handlers.utils import RegisterThingSchema, Logger, base_response
 
 project_logger = Logger()
 logger = project_logger.get_logger()

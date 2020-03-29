@@ -1,3 +1,4 @@
+import json
 import traceback
 
 import boto3
@@ -22,6 +23,33 @@ class Sts(Session):
         Session.__init__(self)
         self._account_client = boto3.client("sts")
         self.account_id = self._account_client.get_caller_identity()["Account"]
+
+
+class ConfigurationHandler(Sts):
+    """
+    Handles the boto3 calss for SSM configuration.
+    """
+
+    def __init__(self, path):
+        Sts.__init__(self)
+        self.ssm_client = boto3.client("ssm")
+        self.path = path
+        self.configuration = None
+
+    def get_config(self):
+        try:
+            parameter_details = self.ssm_client.get_parameters_by_path(Path=self.path, Recursive=False)
+            logger.info(parameter_details)
+            if "Parameters" in parameter_details and len(parameter_details.get("Parameters")) > 0:
+                for param in parameter_details.get("Parameters"):
+                    config_values = json.loads(param.get("Value"))
+                    self.configuration = config_values
+        except Exception:
+            logger.error("Encountered an error loading config from SSM.")
+            logger.error(traceback.print_exc())
+        finally:
+            logger.info(self.configuration)
+            return self.configuration
 
 
 class ThingHandlers(Sts):
@@ -113,10 +141,7 @@ class ThingHandlers(Sts):
             response = self.iot_client.create_keys_and_certificate(setAsActive=certificate_status)
             certificate_data = {
                 "pem": response["certificatePem"],
-                "key_pair": {
-                    "public_key": response["keyPair"]["PublicKey"],
-                    "private_key": response["keyPair"]["PrivateKey"],
-                },
+                "key_pair": {"public_key": response["keyPair"]["PublicKey"], "private_key": response["keyPair"]["PrivateKey"],},
             }
             certificate_arn = response["certificateArn"]
         except ClientError:

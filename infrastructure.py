@@ -1,5 +1,5 @@
 from aws_cdk import core
-from multacdkrecipies import AwsApiGatewayLambdaSWS, AwsLambdaLayerVenv, AwsSsmString
+from multacdkrecipies import AwsApiGatewayLambdaSWS, AwsIotPolicy, AwsLambdaLayerVenv, AwsSsmString
 
 
 APIGATEWAY_CONFIGURATION = {
@@ -15,7 +15,7 @@ APIGATEWAY_CONFIGURATION = {
                 "runtime": "PYTHON_3_7",
                 "handler": "authorizer.lambda_handler",
                 "timeout": 10,
-                "environment_vars": {"LOG_LEVEL": "INFO"},
+                "environment_vars": {"LOG_LEVEL": "INFO", "APP_CONFIG_PATH": "/multa-cvm/dev/cvm-config-parameters"},
                 "iam_actions": ["*"],
             },
             "alarms": [
@@ -34,12 +34,13 @@ APIGATEWAY_CONFIGURATION = {
             "handler": {
                 "origin": {
                     "lambda_name": "handler",
-                    "description": "Handler Lambda for Multa Agents",
+                    "description": "Handler Lambda for Multa Agents Certificate Vending Machine",
                     "code_path": "./src",
                     "runtime": "PYTHON_3_7",
+                    "layers": ["arn:aws:lambda:us-east-1:112646120612:layer:multa-base_VenvLayer_dev:1"],
                     "handler": "handler.lambda_handler",
                     "timeout": 10,
-                    "environment_vars": {"LOG_LEVEL": "INFO"},
+                    "environment_vars": {"LOG_LEVEL": "INFO", "APP_CONFIG_PATH": "/multa-cvm/dev/cvm-config-parameters"},
                     "iam_actions": ["*"],
                 },
                 "alarms": [
@@ -51,6 +52,49 @@ APIGATEWAY_CONFIGURATION = {
     }
 }
 
+IOT_POLICY = {
+    "name": "multaCvmFullPermissions",
+    "policy_document": {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": ["iot:Connect"],
+                "Resource": ["arn:aws:iot:us-east-1:112646120612:client/${iot:Connection.Thing.ThingName}"]
+            },
+            {
+                "Effect": "Allow",
+                "Action": ["iot:Publish"],
+                "Resource": [
+                    "arn:aws:iot:us-east-1:112646120612:topic/tlm/+/${iot:Connection.Thing.ThingName}/d2c",
+                    "arn:aws:iot:us-east-1:112646120612:topic/cmd/+/${iot:Connection.Thing.ThingName}/d2c",
+                    "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update",
+                    "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/get"
+                ]
+            },
+            {
+                "Effect": "Allow",
+                "Action": ["iot:Subscribe"],
+                "Resource": [
+                    "arn:aws:iot:us-east-1:112646120612:topicfilter/cmd/+/${iot:Connection.Thing.ThingName}/c2d",
+                    "arn:aws:iot:us-east-1:112646120612:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update/documents",
+                    "arn:aws:iot:us-east-1:112646120612:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update/delta",
+                    "arn:aws:iot:us-east-1:112646120612:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/shadow/get/accepted"
+                ]
+            },
+            {
+                "Effect": "Allow",
+                "Action": ["iot:Receive"],
+                "Resource": [
+                    "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update/accepted",
+                    "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update/delta",
+                    "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/get"
+                ]
+            }
+        ]
+    }
+}
+
 LAMBDA_LAYER_CONFIGURATION = {
     "layer_name": "VenvLayer",
     "description": "Lambda Layer containing local Python's Virtual Environment",
@@ -58,21 +102,27 @@ LAMBDA_LAYER_CONFIGURATION = {
 }
 
 SSM_CONFIGURATION = {
-    "name": "cvm-parameters",
+    "name": "cvm-config-parameters",
     "description": "Parameters used by Multa CVM API and other applications",
     "string_value": {
-        "POLICY_NAMES": "multaCvmFullPermissions",
-        "AWS_ROOT_CA": {"PREFERRED": "", "BACKUP": ""},
+        "POLICY_NAMES": "multa-base_multaCvmFullPermissions_dev",
+        "AWS_ROOT_CA": {
+            "PREFERRED": "https://www.amazontrust.com/repository/AmazonRootCA1.pem",
+            "BACKUP": "https://www.amazontrust.com/repository/AmazonRootCA3.pem"
+        },
         "DEVICE_KEY": "TEST1234#",
     },
 }
 
 
-class LambdaLayersStack(core.Stack):
+class BaseStack(core.Stack):
     def __init__(self, scope: core.Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
         lambda_layer_local = AwsLambdaLayerVenv(
-            self, id="Layer-Venv", prefix="multa-layer", environment="dev", configuration=LAMBDA_LAYER_CONFIGURATION
+            self, id="Layer-Venv", prefix="multa-base", environment="dev", configuration=LAMBDA_LAYER_CONFIGURATION
+        )
+        iot_policy = AwsIotPolicy(
+            self, id="Iot-Policies", prefix="multa-base", environment="dev", configuration=IOT_POLICY
         )
 
 
@@ -90,7 +140,7 @@ class ApiStack(core.Stack):
 
 
 app = core.App()
-LambdaLayersStack(app, "LambdaLayersStack-dev")
+BaseStack(app, "BaseStack-dev")
 ApiStack(app, "MultaCvmApiStack-dev")
 
 app.synth()
