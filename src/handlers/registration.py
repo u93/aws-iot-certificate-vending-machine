@@ -36,7 +36,7 @@ class CvmRegistration:
                 self.thing_handler.create_thing_(
                     thing_name=self.thing_name,
                     thing_type=self.thing_data["thingTypeName"],
-                    thing_attributes=self.thing_data.get("thingAttributes", {"attributes": {}}),
+                    thing_attributes=self.thing_data.get("thingAttributes", dict(attributes={})),
                 )
                 self.thing_handler.attach_thing_principal_(thing_name=self.thing_name, certificate_arn=certificate_arn)
                 root_ca = self.thing_handler.get_root_ca(

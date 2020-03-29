@@ -102,7 +102,6 @@ class ThingHandlers(Sts):
                 "version": response["version"],
             }
         except ClientError:
-            logger.error(traceback.format_exc())
             raise ThingNotExists
         except Exception:
             raise RuntimeError
