@@ -132,3 +132,4 @@ dmypy.json
 
 .idea/
 /cdk.out/
+/etc/layer/python/lib/python3.7/site-packages/*
