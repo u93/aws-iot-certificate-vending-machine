@@ -131,3 +131,5 @@ dmypy.json
 .idea/inspectionProfiles/
 
 .idea/
+/cdk.out/
+/etc/layer/python/lib/python3.7/site-packages/*
