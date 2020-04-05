@@ -11,6 +11,7 @@ logger = project_logger.get_logger()
 
 
 class CvmRegistration:
+    # TODO: DECOUPLE REGISTER_THING FUNCTION TO HANDLER BETTER RESPONSES THAT MATCH AGENT ONES
     def __init__(self, thing_data: dict, thing_name=None, policy_name=None):
         self.thing_handler = ThingHandlers()
         logger.info(f"APP_CONFIG_PATH ---> {APP_CONFIG_PATH}")
