@@ -134,6 +134,29 @@ class ThingHandlers(Sts):
         else:
             return False
 
+    def get_thing_type(self, partial_name: str):
+        thing_types = list()
+        response = self.iot_client.list_thing_types(maxResults=1)
+        next_token = response.get("nextToken")
+        while next_token is not None:
+            try:
+                next_token = response.get("nextToken")
+                print(next_token)
+                if next_token is None:
+                    response = self.iot_client.list_thing_types(maxResults=1)
+                else:
+                    response = self.iot_client.list_thing_types(maxResults=1, nextToken=next_token)
+            except Exception as e:
+                logger.error(e)
+                raise RuntimeError
+            thing_types.extend(response["thingTypes"])
+
+        results = [
+            thing_type["thingTypeName"] for thing_type in thing_types if partial_name in thing_type["thingTypeName"].lower()
+        ]
+
+        return results[0]
+
     def provision_thing(self, certificate_status=True):
         logger.info("Provisioning thing certificates...")
         try:
