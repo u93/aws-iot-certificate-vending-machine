@@ -47,12 +47,12 @@ class CvmRegistration:
             except (Exception, RuntimeError):
                 logger.error("Error registering thing agent in AWS IoT")
                 logger.error(traceback.format_exc())
-                return False
+                return False, "2"
             else:
-                return dict(certificate_data=certificate_data, root_ca=root_ca)
+                return dict(certificate_data=certificate_data, root_ca=root_ca), "0"
         except RuntimeError:
             logger.error("Uncaught exception... Exiting...")
-            return False
+            return False, "127"
         else:
             logger.error("Thing exists in the AWS IoT Account, exiting...")
-            return False
+            return False, "1"
