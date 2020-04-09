@@ -14,6 +14,7 @@ APIGATEWAY_CONFIGURATION = {
                 "code_path": "./src",
                 "runtime": "PYTHON_3_7",
                 "handler": "authorizer.lambda_handler",
+                "layers": ["arn:aws:lambda:us-east-1:112646120612:layer:multa-base_VenvLayer_dev:1"],
                 "timeout": 10,
                 "environment_vars": {"LOG_LEVEL": "INFO", "APP_CONFIG_PATH": "/multa-cvm/dev/cvm-config-parameters"},
                 "iam_actions": ["*"],
@@ -39,8 +40,12 @@ APIGATEWAY_CONFIGURATION = {
                     "runtime": "PYTHON_3_7",
                     "layers": ["arn:aws:lambda:us-east-1:112646120612:layer:multa-base_VenvLayer_dev:1"],
                     "handler": "handler.lambda_handler",
-                    "timeout": 10,
-                    "environment_vars": {"LOG_LEVEL": "INFO", "APP_CONFIG_PATH": "/multa-cvm/dev/cvm-config-parameters"},
+                    "timeout": 20,
+                    "environment_vars": {
+                        "LOG_LEVEL": "INFO",
+                        "APP_CONFIG_PATH": "/multa-cvm/dev/cvm-config-parameters",
+                        "THING_TYPE_NAME_RULE": "Cvm"
+                    },
                     "iam_actions": ["*"],
                 },
                 "alarms": [

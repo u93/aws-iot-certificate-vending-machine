@@ -28,10 +28,12 @@ def lambda_handler(event, context):
         thing_handler = ThingHandlers()
 
         logger.info("Enriching thing data before creation")
-        thing_attributes = dict(creation_date=round(time.time()), multa_agent_version=request_body.pop("version", "-"))
+        thing_attributes = dict(creation_date=str(round(time.time())), multa_agent_version=str(request_body.pop("version", "-")))
         thing_type = thing_handler.get_thing_type(partial_name=THING_TYPE_NAME_RULE)
+        if thing_type is False:
+            return base_response(status_code=500, dict_body={"message": "Unable to register thing", "failureCode": "2"})
         request_body["thingTypeName"] = thing_type
-        request_body["thingAttributes"]["attributes"] = thing_attributes
+        request_body["thingAttributes"] = dict(attributes=thing_attributes)
 
         # Validating if request has valid parameters
         register_thing_schema = RegisterThingSchema()
@@ -43,11 +45,13 @@ def lambda_handler(event, context):
         thing_handler = CvmRegistration(thing_data=request_body)
         registration_response, registration_code = thing_handler.register_thing()
         if registration_response is False:
-            return base_response(status_code=500, dict_body={"message": "Unable to register thing", "failureCode": registration_code})
+            return base_response(
+                status_code=500, dict_body={"message": "Unable to register thing", "failureCode": registration_code}
+            )
         response = {
             "certificates": registration_response["certificate_data"],
             "rootCA": registration_response["root_ca"],
-            "failureCode": registration_code
+            "failureCode": registration_code,
         }
         return base_response(status_code=200, dict_body=response)
 

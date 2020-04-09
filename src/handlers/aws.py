@@ -136,24 +136,31 @@ class ThingHandlers(Sts):
 
     def get_thing_type(self, partial_name: str):
         thing_types = list()
-        response = self.iot_client.list_thing_types(maxResults=1)
+        response = self.iot_client.list_thing_types(maxResults=10)
+        thing_types.extend(response["thingTypes"])
         next_token = response.get("nextToken")
         while next_token is not None:
             try:
                 next_token = response.get("nextToken")
-                print(next_token)
                 if next_token is None:
-                    response = self.iot_client.list_thing_types(maxResults=1)
+                    response = self.iot_client.list_thing_types(maxResults=10)
                 else:
-                    response = self.iot_client.list_thing_types(maxResults=1, nextToken=next_token)
+                    response = self.iot_client.list_thing_types(maxResults=10, nextToken=next_token)
             except Exception as e:
                 logger.error(e)
                 raise RuntimeError
             thing_types.extend(response["thingTypes"])
 
+        logger.info(thing_types)
         results = [
-            thing_type["thingTypeName"] for thing_type in thing_types if partial_name in thing_type["thingTypeName"].lower()
+            thing_type["thingTypeName"]
+            for thing_type in thing_types
+            if partial_name.lower() in thing_type["thingTypeName"].lower()
         ]
+        logger.info(results)
+        if len(results) == 0:
+            logger.error("Thing type not found!")
+            return False
 
         return results[0]
 
