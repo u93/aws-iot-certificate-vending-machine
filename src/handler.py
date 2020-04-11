@@ -33,9 +33,7 @@ def lambda_handler(event, context):
         thing_handler = ThingHandlers()
         logger.info("Enriching thing data before creation")
         thing_attributes = dict(
-            creation_date=str(round(time.time())),
-            multa_agent_version=str(request_body.pop("version", "-")),
-            account=account_id
+            creation_date=str(round(time.time())), multa_agent_version=str(request_body.pop("version", "-")), account=account_id
         )
         thing_type = thing_handler.get_thing_type(partial_name=THING_TYPE_NAME_RULE)
         if thing_type is False:
@@ -62,7 +60,3 @@ def lambda_handler(event, context):
             "failureCode": registration_code,
         }
         return base_response(status_code=200, dict_body=response)
-
-    if http_method == "DELETE":
-        logger.info("Deleting AWS IoT Thing...")
-        return base_response(status_code=204)

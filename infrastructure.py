@@ -27,7 +27,7 @@ APIGATEWAY_CONFIGURATION = {
         "resource": {
             "name": "multa-agent",
             "allowed_origins": ["*"],
-            "methods": ["GET", "POST", "DELETE"],
+            "methods": ["GET", "POST"],
             "custom_domain": {
                 "domain_name": "cvm-agent.dev.multa.io",
                 "certificate_arn": "arn:aws:acm:us-east-1:112646120612:certificate/48e19da0-71a4-417a-9247-c02ef100749c",
