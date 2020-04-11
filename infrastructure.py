@@ -14,6 +14,7 @@ APIGATEWAY_CONFIGURATION = {
                 "code_path": "./src",
                 "runtime": "PYTHON_3_7",
                 "handler": "authorizer.lambda_handler",
+                "layers": ["arn:aws:lambda:us-east-1:112646120612:layer:multa-base_VenvLayer_dev:1"],
                 "timeout": 10,
                 "environment_vars": {"LOG_LEVEL": "INFO", "APP_CONFIG_PATH": "/multa-cvm/dev/cvm-config-parameters"},
                 "iam_actions": ["*"],
@@ -26,7 +27,7 @@ APIGATEWAY_CONFIGURATION = {
         "resource": {
             "name": "multa-agent",
             "allowed_origins": ["*"],
-            "methods": ["GET", "POST", "DELETE"],
+            "methods": ["GET", "POST"],
             "custom_domain": {
                 "domain_name": "cvm-agent.dev.multa.io",
                 "certificate_arn": "arn:aws:acm:us-east-1:112646120612:certificate/48e19da0-71a4-417a-9247-c02ef100749c",
@@ -39,8 +40,12 @@ APIGATEWAY_CONFIGURATION = {
                     "runtime": "PYTHON_3_7",
                     "layers": ["arn:aws:lambda:us-east-1:112646120612:layer:multa-base_VenvLayer_dev:1"],
                     "handler": "handler.lambda_handler",
-                    "timeout": 10,
-                    "environment_vars": {"LOG_LEVEL": "INFO", "APP_CONFIG_PATH": "/multa-cvm/dev/cvm-config-parameters"},
+                    "timeout": 20,
+                    "environment_vars": {
+                        "LOG_LEVEL": "INFO",
+                        "APP_CONFIG_PATH": "/multa-cvm/dev/cvm-config-parameters",
+                        "THING_TYPE_NAME_RULE": "Cvm"
+                    },
                     "iam_actions": ["*"],
                 },
                 "alarms": [
@@ -53,7 +58,7 @@ APIGATEWAY_CONFIGURATION = {
 }
 
 IOT_POLICY = {
-    "name": "multaCvmFullPermissions",
+    "name": "multaCvmPermissions",
     "policy_document": {
         "Version": "2012-10-17",
         "Statement": [
@@ -66,8 +71,9 @@ IOT_POLICY = {
                 "Effect": "Allow",
                 "Action": ["iot:Publish"],
                 "Resource": [
-                    "arn:aws:iot:us-east-1:112646120612:topic/tlm/+/${iot:Connection.Thing.ThingName}/d2c",
-                    "arn:aws:iot:us-east-1:112646120612:topic/cmd/+/${iot:Connection.Thing.ThingName}/d2c",
+                    "arn:aws:iot:us-east-1:112646120612:topic/tlm/system/${iot:Connection.Thing.ThingName}/d2c",
+                    "arn:aws:iot:us-east-1:112646120612:topic/tlm/processes/${iot:Connection.Thing.ThingName}/d2c",
+                    "arn:aws:iot:us-east-1:112646120612:topic/cmd/actions/${iot:Connection.Thing.ThingName}/d2c",
                     "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update",
                     "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/get"
                 ]
@@ -76,7 +82,7 @@ IOT_POLICY = {
                 "Effect": "Allow",
                 "Action": ["iot:Subscribe"],
                 "Resource": [
-                    "arn:aws:iot:us-east-1:112646120612:topicfilter/cmd/+/${iot:Connection.Thing.ThingName}/c2d",
+                    "arn:aws:iot:us-east-1:112646120612:topicfilter/cmd/actions/${iot:Connection.Thing.ThingName}/c2d",
                     "arn:aws:iot:us-east-1:112646120612:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update/documents",
                     "arn:aws:iot:us-east-1:112646120612:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update/delta",
                     "arn:aws:iot:us-east-1:112646120612:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/shadow/get/accepted"
@@ -105,7 +111,7 @@ SSM_CONFIGURATION = {
     "name": "cvm-config-parameters",
     "description": "Parameters used by Multa CVM API and other applications",
     "string_value": {
-        "POLICY_NAMES": "multa-base_multaCvmFullPermissions_dev",
+        "POLICY_NAMES": "multa-base_multaCvmPermissions_dev",
         "AWS_ROOT_CA": {
             "PREFERRED": "https://www.amazontrust.com/repository/AmazonRootCA1.pem",
             "BACKUP": "https://www.amazontrust.com/repository/AmazonRootCA3.pem"
