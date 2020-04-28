@@ -5,12 +5,12 @@ from multacdkrecipies import AwsApiGatewayLambdaSWS, AwsIotPolicy, AwsLambdaLaye
 APIGATEWAY_CONFIGURATION = {
     "api": {
         "apigateway_name": "cvm-api",
-        "apigateway_description": "API Gateway used for devices to be added to the AWS IoT",
+        "apigateway_description": "API Gateway used for Multa Device Agents to be associated to the AWS IoT",
         "proxy": False,
         "lambda_authorizer": {
             "origin": {
                 "lambda_name": "authorizer",
-                "description": "Handler Lambda for Multa Agents",
+                "description": "Authorizer Lambda function for Multa Device Agents",
                 "code_path": "./src",
                 "runtime": "PYTHON_3_7",
                 "handler": "authorizer.lambda_handler",
@@ -38,7 +38,7 @@ APIGATEWAY_CONFIGURATION = {
                     "description": "Handler Lambda for Multa Agents Certificate Vending Machine",
                     "code_path": "./src",
                     "runtime": "PYTHON_3_7",
-                    "layers": ["arn:aws:lambda:us-east-1:112646120612:layer:multa-base_VenvLayer_dev:1"],
+                    "layers": ["arn:aws:lambda:us-east-1:112646120612:layer:multa-base_VenvLayer_dev:3"],
                     "handler": "handler.lambda_handler",
                     "timeout": 20,
                     "environment_vars": {
@@ -58,7 +58,7 @@ APIGATEWAY_CONFIGURATION = {
 }
 
 IOT_POLICY = {
-    "name": "multaCvmPermissions",
+    "name": "multaCvmPermissionsV01",
     "policy_document": {
         "Version": "2012-10-17",
         "Statement": [
@@ -71,30 +71,44 @@ IOT_POLICY = {
                 "Effect": "Allow",
                 "Action": ["iot:Publish"],
                 "Resource": [
-                    "arn:aws:iot:us-east-1:112646120612:topic/tlm/system/${iot:Connection.Thing.ThingName}/d2c",
-                    "arn:aws:iot:us-east-1:112646120612:topic/tlm/processes/${iot:Connection.Thing.ThingName}/d2c",
-                    "arn:aws:iot:us-east-1:112646120612:topic/cmd/actions/${iot:Connection.Thing.ThingName}/d2c",
+                    "arn:aws:iot:us-east-1:112646120612:topic/tlm/*/${iot:Connection.Thing.ThingName}/d2c",
+                    "arn:aws:iot:us-east-1:112646120612:topic/cmd/*/${iot:Connection.Thing.ThingName}/d2c",
+                    "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/get",
                     "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update",
-                    "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/get"
+                    # "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/jobs/start-next",
+                    # "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/jobs/*/update",
+                    "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/defender/metrics/*",
                 ]
             },
             {
                 "Effect": "Allow",
                 "Action": ["iot:Subscribe"],
                 "Resource": [
-                    "arn:aws:iot:us-east-1:112646120612:topicfilter/cmd/actions/${iot:Connection.Thing.ThingName}/c2d",
-                    "arn:aws:iot:us-east-1:112646120612:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update/documents",
-                    "arn:aws:iot:us-east-1:112646120612:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update/delta",
-                    "arn:aws:iot:us-east-1:112646120612:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/shadow/get/accepted"
+                    "arn:aws:iot:us-east-1:112646120612:topicfilter/cmd/*/${iot:Connection.Thing.ThingName}/c2d",
+                    "arn:aws:iot:us-east-1:112646120612:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update/*",
+                    "arn:aws:iot:us-east-1:112646120612:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/shadow/get/*",
+                    # "arn:aws:iot:us-east-1:112646120612:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/jobs/notify-next",
+                    # "arn:aws:iot:us-east-1:112646120612:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/jobs/start-next/accepted",
+                    # "arn:aws:iot:us-east-1:112646120612:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/jobs/start-next/rejected",
+                    # "arn:aws:iot:us-east-1:112646120612:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/jobs/*/update/accepted",
+                    # "arn:aws:iot:us-east-1:112646120612:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/jobs/*/update/rejected",
+                    "arn:aws:iot:us-east-1:112646120612:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/defender/metrics/*/accepted",
+                    "arn:aws:iot:us-east-1:112646120612:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/defender/metrics/*/rejected",
                 ]
             },
             {
                 "Effect": "Allow",
                 "Action": ["iot:Receive"],
                 "Resource": [
-                    "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update/accepted",
-                    "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update/delta",
-                    "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/get"
+                    "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update/*",
+                    "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/get/*",
+                    # "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/jobs/notify-next",
+                    # "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/jobs/start-next/accepted",
+                    # "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/jobs/start-next/rejected",
+                    # "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/jobs/*/update/accepted",
+                    # "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/jobs/*/update/rejected",
+                    "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/defender/metrics/*/accepted",
+                    "arn:aws:iot:us-east-1:112646120612:topic/$aws/things/${iot:Connection.Thing.ThingName}/defender/metrics/*/rejected",
                 ]
             }
         ]
@@ -103,7 +117,7 @@ IOT_POLICY = {
 
 LAMBDA_LAYER_CONFIGURATION = {
     "layer_name": "VenvLayer",
-    "description": "Lambda Layer containing local Python's Virtual Environment",
+    "description": "Lambda Layer containing local Python's Virtual Environment needed for Multa CVM Auth and Handler",
     "layer_runtimes": ["PYTHON_3_7"],
 }
 
