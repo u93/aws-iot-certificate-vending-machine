@@ -5,12 +5,12 @@ from multacdkrecipies import AwsApiGatewayLambdaSWS, AwsIotPolicy, AwsLambdaLaye
 APIGATEWAY_CONFIGURATION = {
     "api": {
         "apigateway_name": "cvm-api",
-        "apigateway_description": "API Gateway used for devices to be added to the AWS IoT",
+        "apigateway_description": "API Gateway used for Multa Device Agents to be associated to the AWS IoT",
         "proxy": False,
         "lambda_authorizer": {
             "origin": {
                 "lambda_name": "authorizer",
-                "description": "Handler Lambda for Multa Agents",
+                "description": "Authorizer Lambda function for Multa Device Agents",
                 "code_path": "./src",
                 "runtime": "PYTHON_3_7",
                 "handler": "authorizer.lambda_handler",
@@ -38,7 +38,7 @@ APIGATEWAY_CONFIGURATION = {
                     "description": "Handler Lambda for Multa Agents Certificate Vending Machine",
                     "code_path": "./src",
                     "runtime": "PYTHON_3_7",
-                    "layers": ["arn:aws:lambda:us-east-1:112646120612:layer:multa-base_VenvLayer_dev:1"],
+                    "layers": ["arn:aws:lambda:us-east-1:112646120612:layer:multa-base_VenvLayer_dev:3"],
                     "handler": "handler.lambda_handler",
                     "timeout": 20,
                     "environment_vars": {
@@ -117,7 +117,7 @@ IOT_POLICY = {
 
 LAMBDA_LAYER_CONFIGURATION = {
     "layer_name": "VenvLayer",
-    "description": "Lambda Layer containing local Python's Virtual Environment",
+    "description": "Lambda Layer containing local Python's Virtual Environment needed for Multa CVM Auth and Handler",
     "layer_runtimes": ["PYTHON_3_7"],
 }
 
