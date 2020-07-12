@@ -7,6 +7,7 @@ import requests
 
 from .exceptions import IoTBotoError, QueryError, ThingNotExists
 from .utils import Logger
+from settings.aws import USER_POOL_ID
 
 project_logger = Logger()
 logger = project_logger.get_logger()
@@ -188,4 +189,55 @@ class ThingHandlers(Sts):
         except ClientError:
             logger.error(traceback.format_exc())
             raise QueryError(f"Issue with query: {query}")
+        return response
+
+
+class CognitoHandler(Sts):
+    def __init__(self):
+        Sts.__init__(self)
+        self.cognito_client = boto3.client("cognito-idp")
+
+    def check_user(self, email_address: str):
+        response = self.cognito_client.list_users(
+            UserPoolId=USER_POOL_ID, AttributesToGet=[], Limit=10, Filter=f"email = '{email_address}'"
+        )
+        if len(response["Users"]) == 1:
+            return response["Users"]
+        else:
+            return False
+
+    def get_user(self, user_id: str):
+        user_response = dict(user_id=None, user_attributes=None)
+        try:
+            response = self.cognito_client.admin_get_user(UserPoolId=USER_POOL_ID, Username=user_id)
+        except Exception:
+            logger.error("Error getting user by ID")
+            logger.error(traceback.format_exc())
+            return False
+        else:
+            user_response["user_id"] = response["Username"]
+            user_response["user_attributes"] = response["UserAttributes"]
+            return user_response
+
+    def get_user_by_access_token(self, access_token: str):
+        user_response = dict(user_id=None, user_attributes=None)
+        try:
+            response = self.cognito_client.get_user(AccessToken=access_token)
+        except Exception:
+            logger.error("Error GETTING USER by ACCESS Token")
+            logger.error(traceback.format_exc())
+            return False
+        else:
+            user_response["user_id"] = response["Username"]
+            user_response["user_attributes"] = response["UserAttributes"]
+            return user_response
+
+    def list_users(self, pagination_token=None):
+        kwargs = {
+            "UserPoolId": USER_POOL_ID,
+            "Limit": 20,
+        }
+        if pagination_token is not None:
+            kwargs["PaginationToken"] = pagination_token
+        response = self.cognito_client.list_users(**kwargs)
         return response
