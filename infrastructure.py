@@ -78,7 +78,6 @@ environments = CONFIG["environments"]
 
 for environment, configuration in environments.items():
     config = dict(prefix=prefix, environ=environment, config=configuration)
-    print(config)
     MultaCvmStack(app, id=f"MultaCvmStack-{environment}", config=config)
 
 app.synth()

@@ -1,3 +1,6 @@
 {
-  "app": "python3 infrastructure.py"
+  "app": "python3 infrastructure.py",
+  "context": {
+
+  }
 }

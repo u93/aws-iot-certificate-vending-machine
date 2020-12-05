@@ -192,6 +192,33 @@ class ThingHandlers(Sts):
         return response
 
 
+class PolicyHandlers(Sts):
+    def __init__(self):
+        Sts.__init__(self)
+        self.iot_client = boto3.client("iot")
+
+    def _get_policy(self):
+        pass
+
+    def _create_policy(self):
+        pass
+
+    def _update_policy(self):
+        pass
+
+    def _delete_policy(self):
+        pass
+
+    def generate_minimum_policy(self):
+        pass
+
+    def generate_base_policy(self):
+        pass
+
+    def generate_full_policy(self):
+        pass
+
+
 class CognitoHandler(Sts):
     def __init__(self):
         Sts.__init__(self)
