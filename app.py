@@ -1,32 +1,6 @@
 from aws_cdk import core
 from multacdkrecipies import AwsApiGatewayLambdaPipes, AwsLambdaLayerVenv, AwsSsmString, AwsUserServerlessBackend
 
-from config import CONFIG
-
-#
-# class BaseStack(core.Stack):
-#     def __init__(self, scope: core.Construct, id: str, environment=None, **kwargs) -> None:
-#         super().__init__(scope, id, **kwargs)
-#         lambda_layer_local = AwsLambdaLayerVenv(
-#             self, id="Cvm-Layer", prefix="multa_backend", environment=environment, configuration=LAMBDA_LAYER_CONFIGURATION[environment]
-#         )
-#         iot_policy = AwsIotPolicy(
-#             self, id="Cvm-IotPolicies", prefix="multa_backend", environment=environment, configuration=IOT_POLICY[environment]
-#         )
-#
-#
-# class MultaCvmApiStack(core.Stack):
-#     def __init__(self, scope: core.Construct, id: str, environment=None, **kwargs) -> None:
-#         super().__init__(scope, id, **kwargs)
-#         ssm_configuration = AwsSsmString(
-#             self, id="Cvm-Ssm", prefix="multa_backend", environment=environment, configuration=SSM_CONFIGURATION[environment]
-#         )
-#         api_lambda = AwsApiGatewayLambdaPipes(
-#             self, id="Cvm-Api", prefix="multa_backend", environment=environment, configuration=APIGATEWAY_CONFIGURATION[environment]
-#         )
-#
-#         ssm_configuration.grant_read(role=api_lambda.handler_function.role)
-
 
 class MultaCvmStack(core.Stack):
     """
@@ -73,11 +47,15 @@ class MultaCvmStack(core.Stack):
 
 
 app = core.App()
-prefix = CONFIG["prefix"]
-environments = CONFIG["environments"]
+prefix = app.node.try_get_context("prefix")
+environments = app.node.try_get_context("environments")
 
 for environment, configuration in environments.items():
+    if configuration is None:
+        continue
+
+    id_ = f"MultaCvmStack-{environment}"
     config = dict(prefix=prefix, environ=environment, config=configuration)
-    MultaCvmStack(app, id=f"MultaCvmStack-{environment}", config=config)
+    MultaCvmStack(app, id=id_, config=config)
 
 app.synth()
