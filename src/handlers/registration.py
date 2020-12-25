@@ -1,7 +1,7 @@
 import json
 import traceback
 
-from .aws import ThingHandlers, ConfigurationHandler
+from .aws import ThingHandler, ConfigurationHandler
 from .exceptions import ThingNotExists
 from settings.aws import APP_CONFIG_PATH
 from .utils import Logger
@@ -13,7 +13,7 @@ logger = project_logger.get_logger()
 class CvmRegistration:
     # TODO: DECOUPLE REGISTER_THING FUNCTION TO HANDLER BETTER RESPONSES THAT MATCH AGENT ONES
     def __init__(self, thing_data: dict, thing_name=None, policy_name=None):
-        self.thing_handler = ThingHandlers()
+        self.thing_handler = ThingHandler()
         logger.info(f"APP_CONFIG_PATH ---> {APP_CONFIG_PATH}")
         self.configuration_handler = ConfigurationHandler(path=APP_CONFIG_PATH)
         self.configuration_data = self.configuration_handler.get_config()

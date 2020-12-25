@@ -4,9 +4,8 @@ import traceback
 from handlers.auth import AgentAuthorizer, AuthPolicy, HttpVerb, UserAuthorizer, validate_token_payload
 from handlers.utils import Logger
 from settings.aws import (
-    AUTHORIZER_TOKEN_INDENTIFIER_DEVICE,
-    AUTHORIZER_TOKEN_INDENTIFIER_USER,
-    AUTHORIZER_TOKEN_PAYLOAD_LENGTH,
+    AUTHORIZER_TOKEN_IDENTIFIER_DEVICE,
+    AUTHORIZER_TOKEN_IDENTIFIER_USER,
 )
 
 logs_handler = Logger()
@@ -31,11 +30,11 @@ def lambda_handler(event, context):
     if is_token_valid is True:
         token_prefix = event["authorizationToken"].split(" ")[0]
         token_value = event["authorizationToken"].split(" ")[1]
-        if token_prefix == AUTHORIZER_TOKEN_INDENTIFIER_DEVICE:
+        if token_prefix == AUTHORIZER_TOKEN_IDENTIFIER_DEVICE:
             authorizer = AgentAuthorizer()
             principal_id = token_value
             principal_type = "DEVICE"
-        elif token_prefix == AUTHORIZER_TOKEN_INDENTIFIER_USER:
+        elif token_prefix == AUTHORIZER_TOKEN_IDENTIFIER_USER:
             authorizer = UserAuthorizer()
             principal_id = authorizer.validate_access_token(access_token=token_value)
             principal_type = "USER"
@@ -43,11 +42,14 @@ def lambda_handler(event, context):
             logger.error("Wrong prefix in token...")
 
     if principal_id is None or principal_type is None:
+        logger.error(f"Invalid data passed - {principal_id} - {principal_type}")
         raise Exception("Unauthorized")
+    else:
+        logger.info("Valid data passed...")
 
     """
     You can send a 401 Unauthorized response to the client by failing like so:
-    raise Exception('Unauthorized')
+    raise Exception("Unauthorized")
 
     If the token is valid, a policy must be generated which will allow or deny access to the client,
     if access is denied, the client will receive a 403 Access Denied response,
@@ -73,29 +75,30 @@ def lambda_handler(event, context):
 
     # Finally, build the policy
     # policy.allow_all_methods()
-    if principal_type == "DEVICE":
+    if principal_type == "USER":
         policy.allow_method(HttpVerb.ALL, "/agents/*")
         policy.allow_method(HttpVerb.ALL, "/keys/*")
-    elif principal_id == "USER":
+    elif principal_type == "DEVICE":
         policy.allow_method(HttpVerb.POST, "/register")
     else:
         policy.deny_all_methods()
 
     auth_response = policy.build()
-    auth_response["context"] = context
+    logger.info(auth_response)
+
     return auth_response
 
 
 if __name__ == "__main__":
-    token = "DeviceToken 123"
-    # token = "JWT 123"
-    # token = "JWT123"
-    method_arn = ""
+    valid_device_token = "DeviceToken 123"
+    valid_user_token = "JWT 123"
+    invalid_token = "JWT123"
     response = lambda_handler(
-        event=dict(
-            authorizationToken=token,
-            methodArn=method_arn,
-        ),
+        event={
+            "type": "TOKEN",
+            "methodArn": "arn:aws:execute-api:us-east-1:112646120612:n8il2c2eic/prod/POST/register",
+            "authorizationToken": valid_device_token
+        },
         context={},
     )
     logger.info(response)

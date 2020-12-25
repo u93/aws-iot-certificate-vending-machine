@@ -34,6 +34,7 @@ class MultaCvmStack(core.Stack):
         )
         layer_arn = self._lambdalayer.lambda_layer.layer_version_arn
 
+        config["config"]["views"]["api"]["authorizer_function"]["origin"]["layers"].append(layer_arn)
         for function in config["config"]["views"]["api"]["resource_trees"]:
             function["handler"]["layers"].append(layer_arn)
 
