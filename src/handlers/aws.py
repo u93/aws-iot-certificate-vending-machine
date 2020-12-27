@@ -169,7 +169,7 @@ class ThingHandler(Sts):
         else:
             return False
 
-    def get_thing_type(self, partial_name: str):
+    def get_thing_types_by_prefix(self, partial_name: str):
         thing_types = list()
         response = self.iot_client.list_thing_types(maxResults=10)
         thing_types.extend(response["thingTypes"])

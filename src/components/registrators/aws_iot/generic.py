@@ -64,26 +64,28 @@ class AwsIoTGenericRegistrator(BaseRegistrator):
 
     def register(self) -> bool:
         """
-        Registers the agent into AWS IoT. Validation ocurrs in case that the AWS IoT Thing already exists by name.
+        Registers the agent into AWS IoT. Validation occurs in case that the AWS IoT Thing already exists by name.
         Steps are, the AWS IoT Policy is obtained based on the AWS IoT Thing Type, the Thing Attributes are generated
-        and validated based on the AWS IoT Thing Type. Finally the registration is executing using the Boto3 proper steps.
-        :return:
+        and validated based on the AWS IoT Thing Type. Finally the registration is executing using the Boto3
+        proper steps.
+        :return: Status of the registration process.
         """
         thing_name = self.device_registration_data["thingName"]
-        thing_type = self.device_registration_data["thingTypeName"]
-
-        raw_thing_attributes = self.device_registration_data["thingAttributes"]
-        thing_attributes = self.generate_attributes(
-            thing_type=thing_type, validated_attributes=raw_thing_attributes
-        )
-
-        policy = self.get_policy(thing_type=thing_type)
 
         logger.info("Starting thing registration in AWS IoT")
         try:
             self.thing_handler.describe_thing_(thing_name=thing_name)
 
         except ThingNotExists:
+            thing_type = self.device_registration_data["thingTypeName"]
+
+            raw_thing_attributes = self.device_registration_data["thingAttributes"]
+            thing_attributes = self.generate_attributes(
+                thing_type=thing_type, validated_attributes=raw_thing_attributes
+            )
+
+            policy = self.get_policy(thing_type=thing_type)
+
             logger.info("Thing does not exist, preceding to registration!")
             try:
                 self.thing_handler.get_preconfigured_policy(policy_name=policy)
@@ -129,9 +131,13 @@ class AwsIoTGenericRegistrator(BaseRegistrator):
 
             return False
 
-    def get_thing_type(self):
+    def get_thing_type(self) -> str:
+        """
+        Rule that will return the thing type that the registration process will assign.
+        :return: Thing Type name.
+        """
         prefix = "Cvm"
-        thing_type_names = self.thing_handler.get_thing_type(partial_name=prefix)
+        thing_type_names = self.thing_handler.get_thing_types_by_prefix(partial_name=prefix)
 
         return self.select_thing_type(thing_types=thing_type_names)
 

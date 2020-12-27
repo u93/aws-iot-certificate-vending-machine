@@ -48,6 +48,6 @@ if __name__ == "__main__":
     }
     fake_lambda_event = {
         "httpMethod": "POST",
-        "body": '{"thingName":"Test123456","version":"1"}'
+        "body": '{"thingName":"Test","version":"1"}'
     }
     response = lambda_handler(event=fake_lambda_event, context={})
