@@ -4,8 +4,8 @@ import traceback
 from .aws import CognitoHandler
 from handlers.utils import Logger
 from settings.aws import (
-    AUTHORIZER_TOKEN_INDENTIFIER_DEVICE,
-    AUTHORIZER_TOKEN_INDENTIFIER_USER,
+    AUTHORIZER_TOKEN_IDENTIFIER_DEVICE,
+    AUTHORIZER_TOKEN_IDENTIFIER_USER,
     AUTHORIZER_TOKEN_PAYLOAD_LENGTH,
 )
 
@@ -16,12 +16,15 @@ logger = project_logger.get_logger()
 def validate_token_payload(token_payload: str) -> bool:
     split_payload = token_payload.split()
     if len(split_payload) != AUTHORIZER_TOKEN_PAYLOAD_LENGTH:
+        logger.error("Invalid token format... Not proper length")
         return False
 
     token_identifier = split_payload[0]
-    if token_identifier != AUTHORIZER_TOKEN_INDENTIFIER_DEVICE or token_identifier != AUTHORIZER_TOKEN_INDENTIFIER_USER:
+    if token_identifier != AUTHORIZER_TOKEN_IDENTIFIER_DEVICE and token_identifier != AUTHORIZER_TOKEN_IDENTIFIER_USER:
+        logger.error("Invalid token format... Not authorized prefix")
         return False
 
+    logger.info("Token format is valid...")
     return True
 
 

@@ -53,7 +53,7 @@ class ConfigurationHandler(Sts):
             return self.configuration
 
 
-class ThingHandlers(Sts):
+class ThingHandler(Sts):
     """
     Handles the boto3 calls for thing management. Includes Things, Thing Types, Policies, Certificates and Thing
     Indexing.
@@ -67,31 +67,52 @@ class ThingHandlers(Sts):
         logger.info("Attaching IoT policy...")
         try:
             response = self.iot_client.attach_policy(policyName=policy_name, target=certificate_arn)
+
         except ClientError:
+            logger.error("Boto3 error... Unable to attach policy!")
             logger.error(traceback.format_exc())
             raise IoTBotoError
+
+        except Exception:
+            logger.error("Unexpected error...")
+            logger.error(traceback.format_exc())
+            raise RuntimeError
 
     def attach_thing_principal_(self, thing_name: str, certificate_arn: str):
         logger.info("Attaching IoT thing principal...")
         try:
             response = self.iot_client.attach_thing_principal(thingName=thing_name, principal=certificate_arn)
+
         except ClientError:
+            logger.error("Boto3 error... Unable to attach thing to its principal!")
             logger.error(traceback.format_exc())
             raise IoTBotoError
+
+        except Exception:
+            logger.error("Unexpected error...")
+            logger.error(traceback.format_exc())
+            raise RuntimeError
 
     def create_thing_(self, thing_name: str, thing_type: str, thing_attributes: dict):
         logger.info("Creating thing...")
         try:
-            # self.thing_type = kwargs.get("thingTypeName", None)
-            # self.thing_attributes = kwargs.get("attributePayload", None)
             response = self.iot_client.create_thing(
-                thingName=thing_name, thingTypeName=thing_type, attributePayload=thing_attributes,
+                thingName=thing_name,
+                thingTypeName=thing_type,
+                attributePayload={"attributes": thing_attributes},
             )
+
         except ClientError:
+            logger.error("Boto3 error... Unable to create thing!")
             logger.error(traceback.format_exc())
             raise IoTBotoError
 
-    def describe_thing_(self, thing_name):
+        except Exception:
+            logger.error("Unexpected error...")
+            logger.error(traceback.format_exc())
+            raise RuntimeError
+
+    def describe_thing_(self, thing_name: str) -> dict:
         logger.info("Describing thing...")
         try:
             response = self.iot_client.describe_thing(thingName=thing_name)
@@ -102,20 +123,33 @@ class ThingHandlers(Sts):
                 "attributes": response["attributes"],
                 "version": response["version"],
             }
+
         except ClientError:
+            logger.error("Boto3 error... Probably thing does not exist!")
             raise ThingNotExists
+
         except Exception:
+            logger.error("Unexpected error...")
+            logger.error(traceback.format_exc())
             raise RuntimeError
+
         else:
             return thing_data
 
-    def get_preconfigured_policy(self, policy_name: str):
+    def get_preconfigured_policy(self, policy_name: str) -> dict:
         logger.info("Getting preconfigured policy...")
         try:
             response = self.iot_client.get_policy(policyName=policy_name)["policyArn"]
+
         except ClientError:
             logger.error(traceback.format_exc())
+            raise IoTBotoError
+
+        except Exception:
+            logger.error("Unexpected error...")
+            logger.error(traceback.format_exc())
             raise RuntimeError
+
         else:
             return response
 
@@ -124,18 +158,18 @@ class ThingHandlers(Sts):
         try:
             r = requests.get(url=preferred_endpoint)
             r.raise_for_status()
+
         except Exception:
             logger.error("Using backup certficate endpoint...")
             logger.error(traceback.format_exc())
             r = requests.get(url=backup_endpoint)
 
         if r.status_code == 200:
-            logger.info(r.text)
             return r.text
         else:
             return False
 
-    def get_thing_type(self, partial_name: str):
+    def get_thing_types_by_prefix(self, partial_name: str):
         thing_types = list()
         response = self.iot_client.list_thing_types(maxResults=10)
         thing_types.extend(response["thingTypes"])
@@ -147,9 +181,15 @@ class ThingHandlers(Sts):
                     response = self.iot_client.list_thing_types(maxResults=10)
                 else:
                     response = self.iot_client.list_thing_types(maxResults=10, nextToken=next_token)
-            except Exception as e:
-                logger.error(e)
-                raise RuntimeError
+
+            except ClientError:
+                logger.error("Boto3 error...")
+                logger.error(traceback.format_exc())
+
+            except Exception:
+                logger.error("Unexpected error...")
+                logger.error(traceback.format_exc())
+
             thing_types.extend(response["thingTypes"])
 
         logger.info(thing_types)
@@ -158,12 +198,9 @@ class ThingHandlers(Sts):
             for thing_type in thing_types
             if partial_name.lower() in thing_type["thingTypeName"].lower()
         ]
-        logger.info(results)
-        if len(results) == 0:
-            logger.error("Thing type not found!")
-            return False
 
-        return results[0]
+        logger.info("Returning policies...")
+        return results
 
     def provision_thing(self, certificate_status=True):
         logger.info("Provisioning thing certificates...")
@@ -174,10 +211,14 @@ class ThingHandlers(Sts):
                 "key_pair": {"public_key": response["keyPair"]["PublicKey"], "private_key": response["keyPair"]["PrivateKey"],},
             }
             certificate_arn = response["certificateArn"]
+
         except ClientError:
             logger.error(traceback.format_exc())
             raise IoTBotoError
+
         except Exception:
+            logger.error("Unexpected error...")
+            logger.error(traceback.format_exc())
             raise RuntimeError
         else:
             return certificate_data, certificate_arn
@@ -186,9 +227,16 @@ class ThingHandlers(Sts):
         logger.info(f"Searching things with query: {query}")
         try:
             response = self.iot_client.search_index(queryString=query)["things"]
+
         except ClientError:
             logger.error(traceback.format_exc())
             raise QueryError(f"Issue with query: {query}")
+
+        except Exception:
+            logger.error("Unexpected error...")
+            logger.error(traceback.format_exc())
+            raise RuntimeError
+
         return response
 
 

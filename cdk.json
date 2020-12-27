@@ -179,6 +179,16 @@
                     "AWS_ROOT_CA": {
                         "PREFERRED": "https://www.amazontrust.com/repository/AmazonRootCA1.pem",
                         "BACKUP": "https://www.amazontrust.com/repository/AmazonRootCA3.pem"
+                    },
+                    "POLICIES": {
+                        "CvmGenericType": {
+                            "name": "multa_backend_policy_dev"
+                        }
+                    },
+                    "ATTRIBUTES": {
+                        "CvmGenericType": [
+                            {"name": "creationDate"}, {"name": "version"}
+                        ]
                     }
                 }
             },
