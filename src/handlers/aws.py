@@ -97,7 +97,9 @@ class ThingHandler(Sts):
         logger.info("Creating thing...")
         try:
             response = self.iot_client.create_thing(
-                thingName=thing_name, thingTypeName=thing_type, attributePayload=thing_attributes,
+                thingName=thing_name,
+                thingTypeName=thing_type,
+                attributePayload={"attributes": thing_attributes},
             )
 
         except ClientError:
@@ -163,7 +165,6 @@ class ThingHandler(Sts):
             r = requests.get(url=backup_endpoint)
 
         if r.status_code == 200:
-            logger.info(r.text)
             return r.text
         else:
             return False
