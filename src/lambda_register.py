@@ -22,7 +22,7 @@ def lambda_handler(event, context):
     if http_method == "GET":
         return base_response(status_code=200, dict_body={"response": True, "time": round(time.time())})
 
-    if http_method == "POST":
+    elif http_method == "POST":
         try:
             request_body = json.loads(event["body"])
 
@@ -39,15 +39,3 @@ def lambda_handler(event, context):
 
     else:
         return base_response(status_code=405)
-
-
-if __name__ == "__main__":
-    fake_wrong_lambda_event = {
-        "httpMethod": "POST",
-        "body": "{}"
-    }
-    fake_lambda_event = {
-        "httpMethod": "POST",
-        "body": '{"thingName":"Test","version":"1"}'
-    }
-    response = lambda_handler(event=fake_lambda_event, context={})

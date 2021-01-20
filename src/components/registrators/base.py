@@ -7,11 +7,8 @@ class BaseRegistrator:
         """
         Define the Worker Classes for the base steps in the registration process.
         """
-        WORKERS = {
-            "request_validation_handler": None,
-            "registration_validation_handler": None,
-            "thing_handler": None
-        }
+
+        WORKERS = {"request_validation_handler": None, "registration_validation_handler": None, "thing_handler": None}
 
     def __init__(self, device_request_data: dict, **kwargs):
         self.configuration_handler = None
@@ -55,14 +52,11 @@ class BaseRegistrator:
         :return: HTTP Response Code; HTTP Response Body.
         """
         if self.registration_result is False:
-            response = {
-                "status": self.registration_result,
-                "error": self.error
-            }
+            response = {"status": self.registration_result, "error": self.error}
         else:
             response = {
                 "certificateData": self.registration_result["certificate_data"],
-                "rootCa": self.registration_result["root_ca"]
+                "rootCa": self.registration_result["root_ca"],
             }
 
         return self.code, response

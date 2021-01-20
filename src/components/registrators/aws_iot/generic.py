@@ -5,7 +5,7 @@ from components.registrators.base import BaseRegistrator
 from handlers.aws import ThingHandler
 from handlers.exceptions import ThingNotExists
 from handlers.utils import Logger
-from handlers.validations import RegisterAwsIoTThingSchema, RequestAwsIoTThingSchema
+from handlers.authorization.schemas import RegisterAwsIoTThingSchema, RequestAwsIoTThingSchema
 
 
 project_logger = Logger()
@@ -17,7 +17,7 @@ class AwsIoTGenericRegistrator(BaseRegistrator):
         WORKERS = {
             "request_validation_handler": RequestAwsIoTThingSchema,
             "registration_validation_handler": RegisterAwsIoTThingSchema,
-            "thing_handler": ThingHandler
+            "thing_handler": ThingHandler,
         }
 
     def __init__(self, device_request_data):
@@ -45,10 +45,7 @@ class AwsIoTGenericRegistrator(BaseRegistrator):
         Enriches the request that the agent sent with custom parameters and validates the enrichment.
         :return: Boolean with result of the registration data validation process.
         """
-        thing_attributes = {
-            "creationDate": str(round(time.time())),
-            "version": self.device_request_data["version"]
-        }
+        thing_attributes = {"creationDate": str(round(time.time())), "version": self.device_request_data["version"]}
 
         self.device_registration_data["thingName"] = self.device_request_data["thingName"]
         self.device_registration_data["thingTypeName"] = self.get_thing_type()
@@ -92,9 +89,7 @@ class AwsIoTGenericRegistrator(BaseRegistrator):
                 certificate_data, certificate_arn = self.thing_handler.provision_thing()
                 self.thing_handler.attach_policy_(policy_name=policy, certificate_arn=certificate_arn)
                 self.thing_handler.create_thing_(
-                    thing_name=thing_name,
-                    thing_type=thing_type,
-                    thing_attributes=thing_attributes,
+                    thing_name=thing_name, thing_type=thing_type, thing_attributes=thing_attributes,
                 )
                 self.thing_handler.attach_thing_principal_(thing_name=thing_name, certificate_arn=certificate_arn)
                 root_ca = self.thing_handler.get_root_ca(
