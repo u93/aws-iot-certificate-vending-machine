@@ -189,7 +189,10 @@
                         "CvmGenericType": [
                             {"name": "creationDate"}, {"name": "version"}
                         ]
-                    }
+                    },
+                    "DEVICE_AUTHORIZER_TOKEN_PAYLOAD_LENGTH": "",
+                    "DEVICE_AUTHORIZER_TOKEN_IDENTIFIER": "",
+                    "DEVICE_AUTHORIZER_VALID_TOKENS": []
                 }
             },
             "lambda_layer": {

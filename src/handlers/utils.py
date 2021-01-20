@@ -14,6 +14,17 @@ def base_response(status_code: int, dict_body=None):
     return response_dict
 
 
+class HttpVerb:
+    GET = "GET"
+    POST = "POST"
+    PUT = "PUT"
+    PATCH = "PATCH"
+    HEAD = "HEAD"
+    DELETE = "DELETE"
+    OPTIONS = "OPTIONS"
+    ALL = "*"
+
+
 class Logger:
     def __init__(self):
         console_format = "%(pathname)s - %(levelname)s - %(funcName)s - %(lineno)d - %(message)s"
