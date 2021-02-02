@@ -9,13 +9,6 @@ class MultaCvmStack(core.Stack):
 
     def __init__(self, scope: core.Construct, id: str, config=None, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
-        self._backend = AwsUserServerlessBackend(
-            self,
-            id=f"multa-cvm-backend-{config['environ']}",
-            prefix=config["prefix"],
-            environment=config["environ"],
-            configuration=config["config"]["backend"],
-        )
 
         self._ssm = AwsSsmString(
             self,

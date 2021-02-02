@@ -1,5 +1,5 @@
 from handlers.utils import Logger
-from src.lambda_authorizer import lambda_handler as auth_handler
+from applications.aws_lambda.basic.lambda_authorizer import lambda_handler as auth_handler
 
 
 # Import Project Logger
@@ -15,7 +15,7 @@ response = auth_handler(
     event={
         "type": "TOKEN",
         "methodArn": "arn:aws:execute-api:us-east-1:112646120612:n8il2c2eic/prod/POST/register",
-        "authorizationToken": valid_device_token
+        "authorizationToken": valid_device_token,
     },
     context={},
 )

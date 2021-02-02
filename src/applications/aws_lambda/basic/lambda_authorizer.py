@@ -24,4 +24,5 @@ def lambda_handler(event, context):
     authorization_handler = AUTHORIZER_CLASS(authorization_request_data=event)
     authorization_response = authorization_handler.execute()
 
+    logger.info(authorization_response)
     return authorization_response

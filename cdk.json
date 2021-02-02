@@ -1,209 +1,129 @@
 {
-  "app": "python3 app.py",
-  "context": {
-    "prefix": "multa-cvm",
-    "environments": {
-        "dev": {
-            "backend": {
-                "buckets": [
-                    {
-                        "bucket_name": "backend-static-data",
-                        "versioned": true,
-                        "public_read_access": false
-                    }
-                ],
-                "dynamo_tables": [
-                    {
-                        "table_name": "keys",
-                        "partition_key": "id",
-                        "stream": {"enabled": false},
-                        "billing_mode": "pay_per_request"
-                    }
-                ],
-                "user_pool": {
-                    "pool_name": "agent-managers",
-                    "password_policy": {
-                        "minimum_length": 8,
-                        "temporary_password_duration": 1,
-                        "require": {
-                          "lower_case": true,
-                          "upper_case": true,
-                          "digits": true
-                        }
-                    },
-                    "sign_up": {
-                        "enabled": true,
-                        "user_verification": {
-                            "email": {
-                                "subject": "Multa CVM Agent Managers Pool - Account Verification",
-                                "body": "Multa CVM - Your temporary code is {####}, please use it to confirm your account.",
-                                "style": ""
-                            },
-                            "sms": {
-                              "body": "Your temporary code is {####}, please use it to confirm your account."
+    "app": "python3 app.py",
+    "context": {
+        "prefix": "multa-cvm",
+        "environments": {
+            "dev": {
+                "views": {
+                    "api": {
+                        "apigateway_name": "api",
+                        "apigateway_description": "API Gateway used for Multa Device Agents to be associated to the AWS IoT",
+                        "authorizer_function": {
+                            "origin": {
+                                "lambda_name": "authorizer",
+                                "description": "Authorizer Lambda function for Multa Device Agents",
+                                "code_path": "./src",
+                                "runtime": "PYTHON_3_7",
+                                "handler": "applications.aws_lambda.basic.lambda_authorizer.lambda_handler",
+                                "layers": [],
+                                "timeout": 10,
+                                "environment_vars": {
+                                    "LOG_LEVEL": "INFO",
+                                    "APP_CONFIG_PATH": "/multa-cvm/dev/cvm-config-parameters"
+                                },
+                                "iam_actions": [
+                                    "*"
+                                ]
                             }
-                        }
-                    },
-                    "invitation": {
-                        "email": {
-                            "subject": "Multa CVM Agent Managers Pool - Invitation",
-                            "body": "Multa CVM - Your username is {username} and temporary password is {####}."
                         },
-                        "sms": {
-                          "body": "Multa CVM - Your username is {username} and temporary password is {####}."
-                        }
-                    },
-                    "sign_in": {"order": ["email"]},
-                    "attributes": {
-                        "standard": [
-                            {"name": "email", "mutable": true, "required": true},
-                            {"name": "given_name", "mutable": true, "required": true},
-                            {"name": "family_name", "mutable": true, "required": true},
-                            {"name": "phone_number", "mutable": true, "required": true}
+                        "settings": {
+                            "proxy": false,
+                            "default_cors_options": {
+                                "allow_origins": [
+                                    "*"
+                                ],
+                                "options_status_code": 200
+                            },
+                            "default_http_methods": [
+                                "GET",
+                                "POST"
+                            ],
+                            "default_stage_options": {
+                                "metrics_enabled": true,
+                                "logging_level": "INFO"
+                            },
+                            "default_handler": {
+                                "lambda_name": "default",
+                                "description": "Handler Lambda for Multa Agents Certificate Vending Machine.",
+                                "code_path": "./src",
+                                "runtime": "PYTHON_3_7",
+                                "handler": "applications.aws_lambda.basic.lambda_register.lambda_handler",
+                                "layers": [],
+                                "timeout": 10,
+                                "environment_vars": {
+                                    "LOG_LEVEL": "INFO",
+                                    "APP_CONFIG_PATH": "/multa_backend/dev/cvm-config-parameters"
+                                },
+                                "iam_actions": [
+                                    "iot:*"
+                                ]
+                            }
+                        },
+                        "resource_trees": [
+                            {
+                                "resource_name": "register",
+                                "methods": [
+                                    "POST"
+                                ],
+                                "handler": {
+                                    "lambda_name": "register",
+                                    "description": "Handler Lambda for Multa Agents Certificate Vending Machine.",
+                                    "code_path": "./src/",
+                                    "runtime": "PYTHON_3_7",
+                                    "handler": "applications.aws_lambda.basic.lambda_register.lambda_handler",
+                                    "layers": [],
+                                    "timeout": 10,
+                                    "environment_vars": {
+                                        "LOG_LEVEL": "INFO",
+                                        "APP_CONFIG_PATH": "/multa_backend/dev/cvm-config-parameters"
+                                    },
+                                    "iam_actions": [
+                                        "iot:*"
+                                    ]
+                                }
+                            }
                         ]
-                    },
-                    "app_client": {
-                        "enabled": true,
-                        "client_name": "user",
-                        "generate_secret": false,
-                        "auth_flows": {"custom": true, "refresh_token": true, "user_srp": true}
                     }
-                }
-            },
-            "views": {
-                "api": {
-                    "apigateway_name": "api",
-                    "apigateway_description": "API Gateway used for Multa Device Agents to be associated to the AWS IoT",
-                    "authorizer_function": {
-                        "origin": {
-                            "lambda_name": "authorizer",
-                            "description": "Authorizer Lambda function for Multa Device Agents",
-                            "code_path": "./src",
-                            "runtime": "PYTHON_3_7",
-                            "handler": "authorizer.lambda_handler",
-                            "layers": [],
-                            "timeout": 10,
-                            "environment_vars": {
-                                "LOG_LEVEL": "INFO",
-                                "APP_CONFIG_PATH": "/multa-cvm/dev/cvm-config-parameters"
-                            },
-                            "iam_actions": ["*"]
-                        }
-                    },
-                    "settings": {
-                        "proxy": false,
-                        "default_cors_options": {"allow_origins": ["*"], "options_status_code": 200},
-                        "default_http_methods": ["GET", "POST"],
-                        "default_stage_options": {"metrics_enabled": true, "logging_level": "INFO"},
-                        "default_handler": {
-                            "lambda_name": "default",
-                            "description": "Handler Lambda for Multa Agents Certificate Vending Machine.",
-                            "code_path": "./src/",
-                            "runtime": "PYTHON_3_7",
-                            "handler": "default.lambda_handler",
-                            "layers": [],
-                            "timeout": 10,
-                            "environment_vars": {
-                                "LOG_LEVEL": "INFO",
-                                "APP_CONFIG_PATH": "/multa_backend/dev/cvm-config-parameters",
-                                "THING_TYPE_NAME_RULE": "Cvm"
-                            },
-                            "iam_actions": ["iot:*"]
-                        }
-                    },
-                    "resource_trees": [
-                        {
-                            "resource_name": "register",
-                            "methods": ["POST"],
-                            "handler": {
-                                "lambda_name": "register",
-                                "description": "Handler Lambda for Multa Agents Certificate Vending Machine.",
-                                "code_path": "./src/",
-                                "runtime": "PYTHON_3_7",
-                                "handler": "register.lambda_handler",
-                                "layers": [],
-                                "timeout": 10,
-                                "environment_vars": {
-                                    "LOG_LEVEL": "INFO",
-                                    "APP_CONFIG_PATH": "/multa_backend/dev/cvm-config-parameters",
-                                    "THING_TYPE_NAME_RULE": "Cvm"
-                                },
-                                "iam_actions": ["iot:*"]
+                },
+                "ssm": {
+                    "name": "config-parameters",
+                    "description": "Parameters used by Multa CVM API and other applications",
+                    "string_value": {
+                        "AWS_ROOT_CA": {
+                            "PREFERRED": "https://www.amazontrust.com/repository/AmazonRootCA1.pem",
+                            "BACKUP": "https://www.amazontrust.com/repository/AmazonRootCA3.pem"
+                        },
+                        "POLICIES": {
+                            "CvmGenericType": {
+                                "name": "multa_backend_policy_dev"
                             }
                         },
-                        {
-                            "resource_name": "keys",
-                            "methods": ["GET", "POST", "DELETE"],
-                            "handler": {
-                                "lambda_name": "keys",
-                                "description": "Handler Lambda for Multa Agents Certificate Vending Machine.",
-                                "code_path": "./src/",
-                                "runtime": "PYTHON_3_7",
-                                "handler": "keys.lambda_handler",
-                                "layers": [],
-                                "timeout": 10,
-                                "environment_vars": {
-                                    "LOG_LEVEL": "INFO",
-                                    "APP_CONFIG_PATH": "/multa_backend/dev/cvm-config-parameters",
-                                    "THING_TYPE_NAME_RULE": "Cvm"
+                        "ATTRIBUTES": {
+                            "CvmGenericType": [
+                                {
+                                    "name": "creationDate"
                                 },
-                                "iam_actions": ["iot:*", "dynamodb:*"]
-                            }
+                                {
+                                    "name": "version"
+                                }
+                            ]
                         },
-                        {
-                            "resource_name": "agents",
-                            "methods": ["GET", "POST", "DELETE"],
-                            "handler": {
-                                "lambda_name": "agents",
-                                "description": "Handler Lambda for Multa Agents Certificate Vending Machine.",
-                                "code_path": "./src/",
-                                "runtime": "PYTHON_3_7",
-                                "handler": "agents.lambda_handler",
-                                "layers": [],
-                                "timeout": 10,
-                                "environment_vars": {
-                                    "LOG_LEVEL": "INFO",
-                                    "APP_CONFIG_PATH": "/multa_backend/dev/cvm-config-parameters",
-                                    "THING_TYPE_NAME_RULE": "Cvm"
-                                },
-                                "iam_actions": ["iot:*"]
-                            }
-                        }
+                        "DEVICE_AUTHORIZER_TOKEN_PAYLOAD_LENGTH": "",
+                        "DEVICE_AUTHORIZER_TOKEN_IDENTIFIER": "",
+                        "DEVICE_AUTHORIZER_VALID_TOKENS": []
+                    }
+                },
+                "lambda_layer": {
+                    "identifier": "cvm-layer",
+                    "layer_name": "layer",
+                    "description": "Lambda Layer containing local Python's Virtual Environment needed for Multa Lambdas.",
+                    "layer_runtimes": [
+                        "PYTHON_3_7"
                     ]
                 }
             },
-            "ssm": {
-                "name": "config-parameters",
-                "description": "Parameters used by Multa CVM API and other applications",
-                "string_value": {
-                    "AWS_ROOT_CA": {
-                        "PREFERRED": "https://www.amazontrust.com/repository/AmazonRootCA1.pem",
-                        "BACKUP": "https://www.amazontrust.com/repository/AmazonRootCA3.pem"
-                    },
-                    "POLICIES": {
-                        "CvmGenericType": {
-                            "name": "multa_backend_policy_dev"
-                        }
-                    },
-                    "ATTRIBUTES": {
-                        "CvmGenericType": [
-                            {"name": "creationDate"}, {"name": "version"}
-                        ]
-                    },
-                    "DEVICE_AUTHORIZER_TOKEN_PAYLOAD_LENGTH": "",
-                    "DEVICE_AUTHORIZER_TOKEN_IDENTIFIER": "",
-                    "DEVICE_AUTHORIZER_VALID_TOKENS": []
-                }
-            },
-            "lambda_layer": {
-                "identifier": "cvm-layer",
-                "layer_name": "layer",
-                "description": "Lambda Layer containing local Python's Virtual Environment needed for Multa Lambdas.",
-                "layer_runtimes": ["PYTHON_3_7"]
-            }
-        },
-        "demo": null,
-        "prod": null
+            "demo": null,
+            "prod": null
+        }
     }
-}
 }

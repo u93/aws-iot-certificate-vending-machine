@@ -1,5 +1,5 @@
 from handlers.utils import Logger
-from src.lambda_register import lambda_handler as register_handler
+from applications.aws_lambda.basic.lambda_register import lambda_handler as register_handler
 
 
 # Import Project Logger
