@@ -24,5 +24,9 @@ def lambda_handler(event, context):
     authorization_handler = AUTHORIZER_CLASS(authorization_request_data=event)
     authorization_response = authorization_handler.execute()
 
+    if authorization_response is False:
+        logger.error("Authorization process failed...")
+        raise Exception("Unauthorized")
+
     logger.info(authorization_response)
     return authorization_response

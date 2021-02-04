@@ -108,9 +108,9 @@
                                 }
                             ]
                         },
-                        "DEVICE_AUTHORIZER_TOKEN_PAYLOAD_LENGTH": "",
-                        "DEVICE_AUTHORIZER_TOKEN_IDENTIFIER": "",
-                        "DEVICE_AUTHORIZER_VALID_TOKENS": []
+                        "DEVICE_AUTHORIZER_TOKEN_PAYLOAD_LENGTH": "2",
+                        "DEVICE_AUTHORIZER_TOKEN_IDENTIFIER": "DeviceToken",
+                        "DEVICE_AUTHORIZER_VALID_TOKENS": ["NjWO2tVh6fVAeNuLwRsPi-c6N7SP5-DT"]
                     }
                 },
                 "lambda_layer": {
