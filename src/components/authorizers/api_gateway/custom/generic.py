@@ -1,3 +1,5 @@
+import traceback
+
 from components.authorizers.api_gateway.base import BaseApiGwAuthorizer
 from handlers.aws import IamAuthPolicyHandler
 from handlers.utils import HttpVerb, Logger
@@ -43,12 +45,13 @@ class AwsIoTGenericAuthorizer(BaseApiGwAuthorizer):
         return self.valid_request_data
 
     def validate_token(self):
-        validation_errors = self.token_validation_handler.authorization_token_valid(
-            self.authorization_request_data,
-            token_length=int(self.configuration_data["DEVICE_AUTHORIZER_TOKEN_PAYLOAD_LENGTH"]),
-            token_prefix=self.configuration_data["DEVICE_AUTHORIZER_TOKEN_IDENTIFIER"],
-        )
-        if validation_errors:
+        try:
+            self.token_validation_handler.authorization_token_valid(
+                self.authorization_request_data,
+                token_length=int(self.configuration_data["DEVICE_AUTHORIZER_TOKEN_PAYLOAD_LENGTH"]),
+                token_prefix=self.configuration_data["DEVICE_AUTHORIZER_TOKEN_IDENTIFIER"],
+            )
+        except Exception:
             logger.error("Error validating the received token...")
             self.valid_token_data = False
         else:
@@ -57,17 +60,27 @@ class AwsIoTGenericAuthorizer(BaseApiGwAuthorizer):
         return self.valid_token_data
 
     def authorize_token(self):
-        received_token = self.authorization_request_data["authorizationToken"].split(" ")[1]
-        if received_token in self.configuration_data["DEVICE_AUTHORIZER_VALID_TOKENS"]:
-            self.authorization_result = True
-        else:
+        try:
+            received_token = self.authorization_request_data["authorizationToken"].split(" ")[1]
+        except Exception:
+            logger.error("Error authorizing token...")
+            self.authorization_result = False
+            return
+
+        try:
+            if received_token in self.configuration_data["DEVICE_AUTHORIZER_VALID_TOKENS"]:
+                self.authorization_result = True
+            else:
+                self.authorization_result = False
+        except Exception:
+            logger.error("Error authorizing recieved token...")
             self.authorization_result = False
 
     def generate_policy(self):
         tmp = self.authorization_request_data["methodArn"].split(":")
         api_gateway_arn_tmp = tmp[5].split("/")
         aws_account_id = tmp[4]
-        principal_id = self.authorization_request_data["authorizationToken"].split(" ")[1]
+        principal_id = "".join(self.authorization_request_data["authorizationToken"].split(" "))
 
         self.policy_handler.populate(aws_account_id, principal_id)
 
@@ -78,10 +91,16 @@ class AwsIoTGenericAuthorizer(BaseApiGwAuthorizer):
         if self.valid_request_data is True and self.valid_token_data is True and self.authorization_result is True:
             self.policy_handler.allow_method(HttpVerb.POST, "/register")
         else:
-            logger.info(
-                f"Denying all methods due to a failure in authoriztion - {self.valid_request_data} - {self.valid_token_data} - {self.authorization_result}"
+            logger.error(
+                f"Denying all methods due to a failure in authorization - {self.valid_request_data} - {self.valid_token_data} - {self.authorization_result}"
             )
             self.policy_handler.deny_all_methods()
 
-        generated_policy = self.policy_handler.build()
+        try:
+            generated_policy = self.policy_handler.build()
+        except Exception:
+            logger.error("Error building IAM policy...")
+            logger.error(traceback.format_exc())
+            return False
+
         return generated_policy

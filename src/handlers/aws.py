@@ -71,8 +71,51 @@ class IamAuthPolicyHandler(object):
     """
 
     def __init__(self):
+        """
+        Class that manages the creation of AWS IAM Policies for API Gateway Lambda Authorizers.
+        """
+        """
+        The AWS account id the policy will be generated for. This is used to create the method ARNs.
+        """
         self.aws_account_id = None
+
+        """
+        The principal used for the policy, this should be a unique identifier for the end user.
+        """
         self.principal_id = None
+
+        """
+        The policy version used for the evaluation. This should always be '2012-10-17'
+        """
+        self.version = "2012-10-17"
+
+        """
+        The regular expression used to validate resource paths for the policy.
+        """
+        self.path_regex = "^[/.a-zA-Z0-9-\*]+$"
+
+        """
+        The API Gateway API id. By default this is set to '*'
+        """
+        self.rest_api_id = "*"
+
+        """
+        The region where the API is deployed. By default this is set to '*'
+        """
+        self.region = "*"
+
+        """
+        The name of the stage used in the policy. By default this is set to '*'
+        """
+        self.stage = "*"
+
+        """
+        These are the internal lists of allowed and denied methods. These are lists
+        of objects and each object has 2 properties: A resource ARN and a nullable
+        conditions statement.
+        The build method processes these lists and generates the approriate
+        statements for the final policy.
+        """
         self.allow_methods = []
         self.deny_methods = []
 
@@ -189,10 +232,12 @@ class IamAuthPolicyHandler(object):
         self._add_method("Deny", verb, resource, conditions)
 
     def build(self):
-        """Generates the policy document based on the internal lists of allowed and denied
+        """
+        Generates the policy document based on the internal lists of allowed and denied
         conditions. This will generate a policy with two main statements for the effect:
         one statement for Allow and one statement for Deny.
-        Methods that includes conditions will have their own statement in the policy."""
+        Methods that includes conditions will have their own statement in the policy.
+        """
         if (self.allow_methods is None or len(self.allow_methods) == 0) and (
             self.deny_methods is None or len(self.deny_methods) == 0
         ):

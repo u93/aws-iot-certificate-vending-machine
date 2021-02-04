@@ -8,13 +8,9 @@ class RequestRegistrationAuthorizationSchema(Schema):
 
 
 class RequestRegistrationAuthorizationTokenSchema(Schema):
-    # authorization_token = fields.Str(required=True, data_key="authorizationToken")
-    # method_arn = fields.Str(required=True, data_key="methodArn")
-    # type = fields.Str(required=True, data_key="type")
-
     @validates_schema
     def authorization_token_valid(self, data: dict, token_length: int, token_prefix: str):
-        split_payload = data["authorizationToken"].split()
+        split_payload = data["authorizationToken"].split(" ")
         if len(split_payload) != token_length:
             raise ValidationError("Invalid token format... Not proper length")
 
