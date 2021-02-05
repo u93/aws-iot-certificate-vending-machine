@@ -120,6 +120,22 @@
                     "layer_runtimes": [
                         "PYTHON_3_7"
                     ]
+                },
+                "iot_registry_cold_events_pipeline": {
+                    "analytics_resource_name": "registry_events",
+                    "retention_periods": {
+                        "channel": 90,
+                        "datastore": 90
+                    },
+                    "iot_rules": [
+                        {
+                            "rule_name": "registry_events",
+                            "description": "IoT Rule for MQTT Broker Registry Events",
+                            "rule_disabled": false,
+                            "sql": "SELECT * FROM '$aws/events/thing/#'",
+                            "aws_iot_sql_version": "2016-03-23"
+                        }
+                    ]
                 }
             },
             "demo": null,

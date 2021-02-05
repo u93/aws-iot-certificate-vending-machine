@@ -1,5 +1,5 @@
 from aws_cdk import core
-from multacdkrecipies import AwsApiGatewayLambdaPipes, AwsLambdaLayerVenv, AwsSsmString, AwsUserServerlessBackend
+from multacdkrecipies import AwsApiGatewayLambdaPipes, AwsLambdaLayerVenv, AwsSsmString, AwsIotAnalyticsSimplePipeline
 
 
 class MultaCvmStack(core.Stack):
@@ -37,6 +37,14 @@ class MultaCvmStack(core.Stack):
             prefix=config["prefix"],
             environment=config["environ"],
             configuration=config["config"]["views"],
+        )
+
+        self._iot_registry_cold_pipeline = AwsIotAnalyticsSimplePipeline(
+            self,
+            id=f"multa-cvm-iotpipeline-cold-{config['environ']}",
+            prefix=config["prefix"],
+            environment=config["environ"],
+            configuration=config["config"]["iot_registry_cold_events_pipeline"],
         )
 
 
