@@ -1,7 +1,5 @@
 jose==1.0.0
 marshmallow==3.7.0
-numpy==1.19.0
-pandas==1.0.5
 pynamodb==4.3.2
 python-jose-cryptodome==1.3.2
 pytz==2020.1
