@@ -1,4 +1,4 @@
-# aws-iot-certificate-vending-machine - AWS IoT Device Registration Gateway
+# AWS IoT Device Registration Gateway
 
 
 - Designed to provide a common registration entrypoint for AWS IoT devices.
