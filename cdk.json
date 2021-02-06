@@ -137,9 +137,7 @@
                         }
                     ]
                 }
-            },
-            "demo": null,
-            "prod": null
+            }
         }
     }
 }

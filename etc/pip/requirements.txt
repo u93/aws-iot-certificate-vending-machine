@@ -97,7 +97,6 @@ packaging==20.9
 pandas==1.2.1
 pathspec==0.8.0
 pluggy==0.13.1
-public==0.0.0
 publication==0.0.3
 py==1.10.0
 pycodestyle==2.6.0
