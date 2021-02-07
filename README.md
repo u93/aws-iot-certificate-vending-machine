@@ -32,9 +32,17 @@
 
 1. Add modification to `cdk.json` in order to add customizations to your project.
 
-2. Execute `cdk diff` and `cdk deploy` to deploy your project.
+2. Modify `cdk.json` and add your desired tokens in `ssm.string_value.DEVICE_AUTHORIZER_VALID_TOKENS`.
 
-3. Default environment created is `dev` but other environments can be created by adding keys to `cdk.json` at the same level that `dev` is.
+3. Add your desired AWS IoT Thing types in the AWS console, copy the name and use it in:
+    - `ssm.string_value.DEVICE_AUTHORIZER_VALID_TOKENS.POLICIES.${THING_TYPE}.name`
+    - `ssm.string_value.ATTRIBUTES.$TYPE.[].name`
+
+4. Add the AWS IoT Thing Policy and add name to `ssm.string_value.DEVICE_AUTHORIZER_VALID_TOKENS.POLICIES.${THING_TYPE}.name` .
+
+5. Execute `cdk diff` and `cdk deploy` to deploy your project.
+
+6. Default environment created is `dev` but other environments can be created by adding keys to `cdk.json` at the same level that `dev` is.
 
 
 **Structure**
@@ -46,7 +54,104 @@
 - SSM Parameter Store that will contain the application configuration.
 - AWS IoT Analytics data storage for AWS IoT Registry events (broker subscription has to be enabled in AWS IoT).
 
+
+**Default API Endpoints and Registration payload**
+---
+
+- API Endpoint:
+    - `${API_GATEWAY_STAGE_URL}/register`
+- Method:
+    - `POST`
+- Headers:
+    - `Authorization: ${TOKEN DEVICE_AUTHORIZER_TOKEN_IDENTIFIER} ${DEVICE_TOKEN}`
+    - `${DEVICE_AUTHORIZER_TOKEN_IDENTIFIER}` -> Defined AWS SSM Parameter Store
+    - `DEVICE_TOKEN` should be one of the values in `${DEVICE_AUTHORIZER_VALID_TOKENS}` -> Defined AWS SSM Parameter Store
+- Body:
+    - `{"thingName": ${THING_NAME}, "version": "${VERSION}"}`
     
+
+**Default AWS IoT resources**
+---
+
+These resources by name or ARN are stored in the AWS Parameter Store SSM construct.
+
+- `AWS_ROOT_CA.PREFERRED` and `AWS_ROOT_CA.BACKUP` -> AWS IoT root CA endpoints, a preferred one and a backup one.
+- `POLICIES.$TYPE.name` -> AWS IoT Thing Policy based on Thing Type name.
+- `ATTRIBUTES.$TYPE.[].name` -> AWS IoT Thing Type Attributes based on Thing Type name.
+
+- AWS IoT Policy Sample:
+    - Should be created on the console and managed by that or by boto3. Not recommendable to manage using Cloudformation if naming is required.
+    - Name should be added to `cdk.json` in `ssm.string_value.POLICIES` section.
+    - If using project with defaults. Use as name -> `multa_backend_policy_dev`
+```
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iot:Connect"
+      ],
+      "Resource": [
+        "arn:aws:iot:us-east-1:${ACCOUNT_ID}:client/${iot:Connection.Thing.ThingName}"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iot:Publish"
+      ],
+      "Resource": [
+        "arn:aws:iot:us-east-1:${ACCOUNT_ID}:topic/tlm/*/${iot:Connection.Thing.ThingName}/d2c",
+        "arn:aws:iot:us-east-1:${ACCOUNT_ID}:topic/cmd/*/${iot:Connection.Thing.ThingName}/d2c",
+        "arn:aws:iot:us-east-1:${ACCOUNT_ID}:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/get",
+        "arn:aws:iot:us-east-1:${ACCOUNT_ID}:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update",
+        "arn:aws:iot:us-east-1:${ACCOUNT_ID}:topic/$aws/things/${iot:Connection.Thing.ThingName}/defender/metrics/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iot:Subscribe"
+      ],
+      "Resource": [
+        "arn:aws:iot:us-east-1:${ACCOUNT_ID}:topicfilter/cmd/*/${iot:Connection.Thing.ThingName}/c2d",
+        "arn:aws:iot:us-east-1:${ACCOUNT_ID}:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update/*",
+        "arn:aws:iot:us-east-1:${ACCOUNT_ID}:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/shadow/get/*",
+        "arn:aws:iot:us-east-1:${ACCOUNT_ID}:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/defender/metrics/*/accepted",
+        "arn:aws:iot:us-east-1:${ACCOUNT_ID}:topicfilter/$aws/things/${iot:Connection.Thing.ThingName}/defender/metrics/*/rejected"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iot:Receive"
+      ],
+      "Resource": [
+        "arn:aws:iot:us-east-1:${ACCOUNT_ID}:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/update/*",
+        "arn:aws:iot:us-east-1:${ACCOUNT_ID}:topic/$aws/things/${iot:Connection.Thing.ThingName}/shadow/get/*",
+        "arn:aws:iot:us-east-1:${ACCOUNT_ID}:topic/$aws/things/${iot:Connection.Thing.ThingName}/defender/metrics/*/accepted",
+        "arn:aws:iot:us-east-1:${ACCOUNT_ID}:topic/$aws/things/${iot:Connection.Thing.ThingName}/defender/metrics/*/rejected"
+      ]
+    }
+  ]
+}
+```
+    
+**Project Extension**
+---
+
+In order to add new modules or lambda functions to the project, either Authorizer or Registration Lambdas, base structure is the same:
+
+- `applications` module contains the lambda functions and those are formed by `components`
+
+- `components` contain the Classes that will be used in `applications` and those are formed by `handlers` Classes and functions.
+
+- `handlers` are the base Classes and functions that will execute authorization, validation, registration, etc.
+
+Finally, modify the configuration in `cdk.json` to point to different Lambda functions other that the defaults.
+
+
 **How to Contribute**
 ---
 
