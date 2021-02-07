@@ -16,14 +16,12 @@
                                 "runtime": "PYTHON_3_7",
                                 "handler": "applications.aws_lambda.basic.lambda_authorizer.lambda_handler",
                                 "layers": [],
-                                "timeout": 10,
+                                "timeout": 15,
                                 "environment_vars": {
                                     "LOG_LEVEL": "INFO",
-                                    "APP_CONFIG_PATH": "/multa-cvm/dev/cvm-config-parameters"
+                                    "APP_CONFIG_PATH": "/multa-cvm/dev/config-parameters"
                                 },
-                                "iam_actions": [
-                                    "*"
-                                ]
+                                "iam_actions": ["ssm:GetParametersByPath"]
                             }
                         },
                         "settings": {
@@ -52,10 +50,12 @@
                                 "timeout": 10,
                                 "environment_vars": {
                                     "LOG_LEVEL": "INFO",
-                                    "APP_CONFIG_PATH": "/multa_backend/dev/cvm-config-parameters"
+                                    "APP_CONFIG_PATH": "/multa-cvm/dev/config-parameters"
                                 },
                                 "iam_actions": [
-                                    "iot:*"
+                                    "ssm:GetParametersByPath", "iot:ListThingTypes", "iot:GetPolicy",
+                                    "iot:DescribeThing", "iot:CreateKeysAndCertificate", "iot:AttachPolicy",
+                                    "iot:CreateThing", "iot:AttachThingPrincipal"
                                 ]
                             }
                         },
@@ -75,10 +75,12 @@
                                     "timeout": 10,
                                     "environment_vars": {
                                         "LOG_LEVEL": "INFO",
-                                        "APP_CONFIG_PATH": "/multa_backend/dev/cvm-config-parameters"
+                                        "APP_CONFIG_PATH": "/multa-cvm/dev/config-parameters"
                                     },
                                     "iam_actions": [
-                                        "iot:*"
+                                        "ssm:GetParametersByPath", "iot:ListThingTypes", "iot:GetPolicy",
+                                        "iot:DescribeThing", "iot:CreateKeysAndCertificate", "iot:AttachPolicy",
+                                        "iot:CreateThing", "iot:AttachThingPrincipal"
                                     ]
                                 }
                             }
@@ -110,7 +112,7 @@
                         },
                         "DEVICE_AUTHORIZER_TOKEN_PAYLOAD_LENGTH": "2",
                         "DEVICE_AUTHORIZER_TOKEN_IDENTIFIER": "DeviceToken",
-                        "DEVICE_AUTHORIZER_VALID_TOKENS": ["NjWO2tVh6fVAeNuLwRsPi-c6N7SP5-DT"]
+                        "DEVICE_AUTHORIZER_VALID_TOKENS": []
                     }
                 },
                 "lambda_layer": {
@@ -137,9 +139,7 @@
                         }
                     ]
                 }
-            },
-            "demo": null,
-            "prod": null
+            }
         }
     }
 }
