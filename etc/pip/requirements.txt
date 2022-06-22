@@ -92,7 +92,7 @@ marshmallow==3.10.0
 mccabe==0.6.1
 multacdkrecipies==0.2.0.5
 mypy-extensions==0.4.3
-numpy==1.20.0
+numpy==1.22.0
 packaging==20.9
 pandas==1.2.1
 pathspec==0.8.0
